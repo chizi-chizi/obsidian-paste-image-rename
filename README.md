@@ -14,7 +14,7 @@ This plugin is inspired by Zettlr, Zettlr shows a prompt that allows the user to
 Paste image rename plugin not only implements Zettlr's feature, but also allows you to customize how the image name would be generated, and eventually free you from the hassle by automatically renaming the image according to the rules.
 
 **Table of Contents**
-- [Obsidian paste image rename](#obsidian-paste-image-rename)
+- [Obsidian paste image rename](#obsidian-my-paste-image-rename)
   - [How to use](#how-to-use)
     - [Basic usage](#basic-usage)
     - [Set `imageNameKey` frontmatter](#set-imagenamekey-frontmatter)

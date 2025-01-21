@@ -14,6 +14,7 @@ import {
   HeadingCache,
   MarkdownView,
   Modal,
+  normalizePath,
   Notice,
   Plugin,
   PluginSettingTab,
@@ -147,17 +148,43 @@ export default class PasteImageRenamePlugin extends Plugin {
 		this.renameFile(file, newName, activeFile.path, true)
 	}
 
+	async ensureDirectoryExists(dirPath: string, adapter:any){
+		const parts = dirPath.split('/');
+		let currentPath = '';
+
+		for(const part of parts){
+			if (part === '') continue; //Skip root slash
+			currentPath = normalizePath(`${currentPath}/${part}`);
+			try {
+				if(!(await adapter.exists(currentPath))){
+					await adapter.mkdir(currentPath);
+					new Notice(`Created new directory:${currentPath}`);
+				}
+
+			}catch (error){
+				console.error(`Failed to ensure directory exists:${currentPath}`, error);
+				break; //Exit if any critical failure occurs
+			}
+		}
+	}
+
 	async renameFile(file: TFile, inputNewName: string, sourcePath: string, replaceCurrentLine?: boolean) {
 		// deduplicate name
 		const { name:newName } = await this.deduplicateNewName(inputNewName, file)
 		debugLog('deduplicated newName:', newName)
 		const originName = file.name
 
+		//确保目标路径格式正确
+		const newPath = normalizePath(path.join(file.parent.path, newName));
+		//获取新路径的目录
+		const newDir = normalizePath(newPath).split('/').slice(0, -1).join('/');
+		//确保目录存在
+		await this.ensureDirectoryExists(newDir, this.app.vault.adapter);
+
 		// generate linkText using Obsidian API, linkText is either  ![](filename.png) or ![[filename.png]] according to the "Use [[Wikilinks]]" setting.
 		const linkText = this.app.fileManager.generateMarkdownLink(file, sourcePath)
 
 		// file system operation: rename the file
-		const newPath = path.join(file.parent.path, newName)
 		try {
 			await this.app.fileManager.renameFile(file, newPath)
 		} catch (err) {
